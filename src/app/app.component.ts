@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import { AuthenticationService } from './upload-service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { PDFDocument } from "pdf-lib";
 
 @Component({
   selector: 'app-root',
@@ -17,18 +20,19 @@ export class AuthenticationComponent {
   enviando: boolean = false;
   overwrite= false;
   botonEnviar= false;
-  // listaArchivos: DocumentModel [] = [];
+
   rutaBase = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=createdir&type=standard`;
-  rutaRelativa = '/OneDrive'
+  rutaRelativa = '/OneDrive';
   dirSubcarpetas = ['CUADRES2','S50', '2025','Diciembre'];
   carpetaMes = this.dirSubcarpetas[3];
   carpetaAno =this.dirSubcarpetas[2];
   dirTotal=`${this.carpetaAno}/${this.carpetaMes}`;
 
-  
   formdate = new  FormData();
   header=new HttpHeaders;
   upload = "";
+
+  ElementCaptured !: HTMLElement;
   constructor(private authService: AuthenticationService,private http: HttpClient) {}
 
   authenticate() {
@@ -47,7 +51,7 @@ export class AuthenticationComponent {
     });
   }
 
-  onFileSelected(event: any) {
+  FileSelected(event: any) {
     this.fileToUpload = event.target.files[0];
   }
 
@@ -69,7 +73,6 @@ export class AuthenticationComponent {
     this.header=headers;
 
     //Verificacion Carpetas
-
     this.crearSubcarpetas(this.rutaBase, this.dirSubcarpetas,this.rutaRelativa);
    
     //Obtener archivos de la Nas y comparar nombre del archivo a subir
@@ -98,7 +101,6 @@ export class AuthenticationComponent {
       console.error("Error al obtener la lista de archivos", error);
     }
     });
-    
   }
 
   crearSubcarpetas(rutaBase: string, nombresSubcarpetas: string[], rutaRelativa: string): void {
@@ -221,5 +223,30 @@ export class AuthenticationComponent {
         this.enviando = false;
       }
     }, 100);
+  }
+
+  capturarPantalla() {
+    const elemento = document.body;
+    this.ElementCaptured = elemento;
+    if (elemento) {
+      html2canvas(elemento).then((canvas) => {
+        const pdf = new jsPDF("p", "mm", "a4");
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = 210; 
+        const pageHeight = 297; 
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        pdf.save("captura-de-pantalla.pdf");
+      });
+    }
   }
 }

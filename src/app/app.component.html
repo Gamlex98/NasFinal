@@ -5,13 +5,13 @@
 <div class="d-flex justify-content-center">
   <div *ngIf="!authenticated">
     <button type="button" class="btn btn-primary" style="margin-left: 20PX;" (click)="authenticate()"> *Click* authentication required  *Click*</button>
+    <br>
   </div>
-
   <div *ngIf="authenticated">
       <div class="col-8" class="d-flex justify-content-center">
         <label class="btn btn-default p-0">
           <div class="mb-3">
-            <input class="form-control" type="file" id="archivo" name="archivo" (change)="onFileSelected($event)" required>
+            <input class="form-control" type="file" id="archivo" name="archivo" (change)="FileSelected($event)" required>
           </div>
         </label>
       </div>
@@ -31,6 +31,8 @@
         <button id="downloadBtn" class="btn btn-primary" color="primary" style="margin-top: 15px;" (click)="downloadFile()" [disabled]="!botonEnviar">Descargar Archivo Enviado </button>
         <button id="deleteBtn" class="btn btn-primary" color="primary" style="margin-left: 15px;margin-top: 15px;" (click)="deleteFile()" [disabled]="!botonEnviar">Eliminar Archivo Enviado</button>
       </div>
+      <br>
+      <button  class="btn btn-primary" color="primary" (click)="capturarPantalla()">Descargar como PDF</button>
     </div>
 </div>
 
