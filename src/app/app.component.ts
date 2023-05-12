@@ -20,11 +20,15 @@ export class AuthenticationComponent {
   // listaArchivos: DocumentModel [] = [];
   rutaBase = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=createdir&type=standard`;
   rutaRelativa = '/OneDrive'
-  dirSubcarpetas = ['CUADRES2','S50', '2023','Sept'];
+  dirSubcarpetas = ['CUADRES2','S50', '2025','Diciembre'];
   carpetaMes = this.dirSubcarpetas[3];
   carpetaAno =this.dirSubcarpetas[2];
   dirTotal=`${this.carpetaAno}/${this.carpetaMes}`;
 
+  
+  formdate = new  FormData();
+  header=new HttpHeaders;
+  upload = "";
   constructor(private authService: AuthenticationService,private http: HttpClient) {}
 
   authenticate() {
@@ -52,22 +56,21 @@ export class AuthenticationComponent {
       alert("DEBES SELECCIONAR UN ARCHIVO !!");
       return
     }
-    console.log("Direccion Destino :"+ this.dirTotal);
     const uploadUrl = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=upload&type=standard&sid=${this.sid}&dest_path=/OneDrive/CUADRES2/S50/${this.dirTotal}&overwrite=1&progress=-OneDrive`;
-
+    this.upload = uploadUrl;
+    console.log("Url nueva : " + this.upload);
     const formData = new FormData();
     formData.append('file', this.fileToUpload, this.fileToUpload.name);
     console.log("nombre archivo : " + this.fileToUpload.name);
-
+    this.formdate = formData;
     const headers = new HttpHeaders();
     headers.append('Content-Type', 'multipart/form-data');
     headers.append('Accept', 'application/json');
-    
+    this.header=headers;
+
     //Verificacion Carpetas
+
     this.crearSubcarpetas(this.rutaBase, this.dirSubcarpetas,this.rutaRelativa);
-    this.doUpload(uploadUrl,formData,headers);
-    this.botonEnviar=true;
-    this.progressBar();
    
     //Obtener archivos de la Nas y comparar nombre del archivo a subir
     this.authService.getList(this.sid , this.dirTotal).subscribe({
@@ -87,36 +90,10 @@ export class AuthenticationComponent {
           this.doUpload(uploadUrl,formData,headers);
           this.botonEnviar=true;
           this.progressBar();
-        // } else if (result.dismiss == Swal.DismissReason.cancel) {
-        //   // Permitir al usuario cambiar el nombre del archivo
-        //   let newName: string | null = null;
-        //   while (!newName) {
-        //     newName = window.prompt("Por favor ingrese un nuevo nombre para el archivo:");
-        //     if (newName === null) {
-        //       // El usuario ha cancelado el prompt
-        //       return;
-        //     }
-        //     newName = newName.trim(); // Eliminar espacios en blanco al inicio y al final
-        //     if (newName === "") {
-        //       alert("El nombre no puede estar vacío. Por favor, ingrese un nombre válido.");
-        //       newName = null;
-        //     }
-        //   }
-        //   //Creacion archivo con el nuevo nombre
-        //   const extensionIndex = this.fileToUpload.name.lastIndexOf('.');
-        //   const extension = this.fileToUpload.name.substring(extensionIndex);
-        //   const newFilename = `${newName}${extension}`;
-        //   if (newFilename) {
-        //     const newFile =  new File([this.fileToUpload], newFilename, { type: this.fileToUpload.type });
-        //     this.fileToUpload = newFile;
-        //     this.onUpload();
-        //     this.botonEnviar=true;
-        //   } 
-        // }
-      }}else{
+        }}else{
         this.doUpload(uploadUrl,formData,headers);
-      }
-    },
+        }
+      },
     error: (error) => {
       console.error("Error al obtener la lista de archivos", error);
     }
@@ -136,6 +113,9 @@ export class AuthenticationComponent {
         // Llamamos recursivamente a la función para crear la siguiente subcarpeta
         this.crearSubcarpetas(rutaBase,nombresSubcarpetas.slice(1),`${rutaRelativa}/${subcarpetas}` );
         console.log(`Subcarpeta ${subcarpetas} creada exitosamente en la ruta ${rutaRelativa}.`);
+        this.doUpload(this.upload,this.formdate,this.header);
+        this.botonEnviar=true;
+        this.progressBar();
       },
       error: (err) => {
         console.error(`Error al crear la subcarpeta ${subcarpetas} en la ruta ${rutaRelativa}.`, err);
