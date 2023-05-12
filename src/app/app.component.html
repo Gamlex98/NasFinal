@@ -1,0 +1,38 @@
+
+<h1 class="title"> Upload Files To Nas </h1>
+<br>
+
+<div class="d-flex justify-content-center">
+  <div *ngIf="!authenticated">
+    <button type="button" class="btn btn-primary" style="margin-left: 20PX;" (click)="authenticate()"> *Click* authentication required  *Click*</button>
+  </div>
+
+  <div *ngIf="authenticated">
+      <div class="col-8" class="d-flex justify-content-center">
+        <label class="btn btn-default p-0">
+          <div class="mb-3">
+            <input class="form-control" type="file" id="archivo" name="archivo" (change)="onFileSelected($event)" required>
+          </div>
+        </label>
+      </div>
+      <div class="col-8" class="d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary" color="primary" [disabled]="enviando" (click)="onUpload()">
+        <span *ngIf="!enviando"> Enviar </span>
+        <span *ngIf="enviando"> Enviando... </span>
+      </button>    
+      </div>
+      <div class="d-flex justify-content-center">
+        <mat-progress-bar mode="determinate" [value]="porcentaje" style="margin-left: 50px;margin-right: 50px;margin-top: 20px;"></mat-progress-bar>
+      </div>
+      <div *ngIf="!enviando && porcentaje === 100" class="letraEnvio">
+        Envío Exitoso
+      </div>
+      <div class="col-8" class="d-flex justify-content-center">
+        <button id="downloadBtn" class="btn btn-primary" color="primary" style="margin-top: 15px;" (click)="downloadFile()" [disabled]="!botonEnviar">Descargar Archivo Enviado </button>
+        <button id="deleteBtn" class="btn btn-primary" color="primary" style="margin-left: 15px;margin-top: 15px;" (click)="deleteFile()" [disabled]="!botonEnviar">Eliminar Archivo Enviado</button>
+      </div>
+    </div>
+</div>
+
+
+
