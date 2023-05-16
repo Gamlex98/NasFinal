@@ -4,7 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFPage } from 'pdf-lib';
 
 @Component({
   selector: 'app-root',
@@ -31,6 +31,10 @@ export class AuthenticationComponent {
   formdate = new  FormData();
   header=new HttpHeaders;
   upload = "";
+
+  file1 !: File ;
+  file2 !: File ;
+  pdfCapturado !: File ;
 
   ElementCaptured !: HTMLElement;
   constructor(private authService: AuthenticationService,private http: HttpClient) {}
@@ -232,8 +236,8 @@ export class AuthenticationComponent {
       html2canvas(elemento).then((canvas) => {
         const pdf = new jsPDF("p", "mm", "a4");
         const imgData = canvas.toDataURL("image/png");
-        const imgWidth = 210; 
-        const pageHeight = 297; 
+        const imgWidth = 195; 
+        const pageHeight = 295; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
         let position = 0;
@@ -245,8 +249,68 @@ export class AuthenticationComponent {
           pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
           heightLeft -= pageHeight;
         }
-        pdf.save("captura-de-pantalla.pdf");
+        const pdfBytes = pdf.output('blob');
+        this.pdfCapturado = new File([pdfBytes], "captura-de-pantalla.pdf", { type: 'application/pdf' });
+        alert('CAPTURA DE PANTALLA TOMADA');
       });
     }
+  }
+
+  onFileSelected(event: any, field: string) {
+    const file = event.target.files[0];
+    if (field === 'file1') {
+      this.file1 = file;
+    } else if (field === 'file2') {
+      this.file2 = file;
+    }
+  }
+
+  async mergePDFs() {
+    if (!this.pdfCapturado || !this.file2) {
+      alert("Selecciona Archivos");
+      console.log('Debe seleccionar ambos archivos');
+      return;
+    }
+  
+    const pdfBytes1 = await this.readFile(this.pdfCapturado);
+    const pdfBytes2 = await this.readFile(this.file2);
+  
+    const pdfUnion = await PDFDocument.create();
+  
+    const sourcePdf1 = await PDFDocument.load(pdfBytes1);
+    const sourcePdf2 = await PDFDocument.load(pdfBytes2);
+  
+    const pages1 = await pdfUnion.copyPages(sourcePdf1, sourcePdf1.getPageIndices());
+    const pages2 = await pdfUnion.copyPages(sourcePdf2, sourcePdf2.getPageIndices());
+  
+    pages1.forEach((page) => {
+      pdfUnion.addPage(page);
+    });
+  
+    pages2.forEach((page) => {
+      pdfUnion.addPage(page);
+    });
+  
+    const mergedPdfBytes = await pdfUnion.save();
+    // Descargar el archivo PDF resultante
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(new Blob([mergedPdfBytes], { type: 'application/pdf' }));
+    downloadLink.download = 'combinado.pdf';
+    downloadLink.click();
+  }
+
+  async readFile(file: File): Promise<Uint8Array> {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event: any) => {
+        const arrayBuffer = event.target.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        resolve(uint8Array);
+      };
+      reader.onerror = (event:any) => {
+        reject(event.target.error);
+      };
+      reader.readAsArrayBuffer(file);
+    });
   }
 }

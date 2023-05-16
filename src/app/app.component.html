@@ -6,6 +6,10 @@
   <div *ngIf="!authenticated">
     <button type="button" class="btn btn-primary" style="margin-left: 20PX;" (click)="authenticate()"> *Click* authentication required  *Click*</button>
     <br>
+    <!-- pdf-merge.component.html -->
+    <input type="file" class="form-control" style="margin-top: 10px;" (change)="onFileSelected($event, 'file2')" accept=".pdf">
+    <button  class="btn btn-primary" color="primary" style="margin-top: 10px;margin-right: 10px;" (click)="capturarPantalla()">Capturar Pantalla</button>
+    <button  class="btn btn-primary" color="primary" style="margin-top: 10px;" (click)="mergePDFs()">Unir PDFs</button>
   </div>
   <div *ngIf="authenticated">
       <div class="col-8" class="d-flex justify-content-center">
@@ -32,7 +36,6 @@
         <button id="deleteBtn" class="btn btn-primary" color="primary" style="margin-left: 15px;margin-top: 15px;" (click)="deleteFile()" [disabled]="!botonEnviar">Eliminar Archivo Enviado</button>
       </div>
       <br>
-      <button  class="btn btn-primary" color="primary" (click)="capturarPantalla()">Descargar como PDF</button>
     </div>
 </div>
 
