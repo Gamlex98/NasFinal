@@ -6,10 +6,12 @@
   <div *ngIf="!authenticated">
     <button type="button" class="btn btn-primary" style="margin-left: 20PX;" (click)="authenticate()"> *Click* authentication required  *Click*</button>
     <br>
-    <!-- pdf-merge.component.html -->
-    <input type="file" class="form-control" style="margin-top: 10px;" (change)="onFileSelected($event, 'file2')" accept=".pdf">
-    <button  class="btn btn-primary" color="primary" style="margin-top: 10px;margin-right: 10px;" (click)="capturarPantalla()">Capturar Pantalla</button>
-    <button  class="btn btn-primary" color="primary" style="margin-top: 10px;" (click)="mergePDFs()">Unir PDFs</button>
+    <div style="margin-top: 120px;">
+      <h1 class="title"> Generacion y Union de PDF </h1>
+      <input type="file" class="form-control"  (change)="onFileSelected2($event, 'file2')" accept=".pdf">
+      <button  class="btn btn-primary" color="primary" style="margin-top: 10px;margin-right: 10px;" (click)="capturarPantalla()">Generar PDF </button>
+      <button  class="btn btn-primary" color="primary" style="margin-top: 10px;" (click)="mergePDFs()">Unir PDFs</button>
+    </div>
   </div>
   <div *ngIf="authenticated">
       <div class="col-8" class="d-flex justify-content-center">

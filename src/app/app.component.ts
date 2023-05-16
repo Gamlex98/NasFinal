@@ -4,7 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { PDFDocument, PDFPage } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 
 @Component({
   selector: 'app-root',
@@ -32,11 +32,9 @@ export class AuthenticationComponent {
   header=new HttpHeaders;
   upload = "";
 
-  file1 !: File ;
-  file2 !: File ;
   pdfCapturado !: File ;
+  file2 !: File ;
 
-  ElementCaptured !: HTMLElement;
   constructor(private authService: AuthenticationService,private http: HttpClient) {}
 
   authenticate() {
@@ -231,12 +229,11 @@ export class AuthenticationComponent {
 
   capturarPantalla() {
     const elemento = document.body;
-    this.ElementCaptured = elemento;
     if (elemento) {
       html2canvas(elemento).then((canvas) => {
         const pdf = new jsPDF("p", "mm", "a4");
         const imgData = canvas.toDataURL("image/png");
-        const imgWidth = 195; 
+        const imgWidth = 210; 
         const pageHeight = 295; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
@@ -249,26 +246,33 @@ export class AuthenticationComponent {
           pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
           heightLeft -= pageHeight;
         }
-        const pdfBytes = pdf.output('blob');
-        this.pdfCapturado = new File([pdfBytes], "captura-de-pantalla.pdf", { type: 'application/pdf' });
-        alert('CAPTURA DE PANTALLA TOMADA');
+        const pdfNew = pdf.output('blob');
+        this.pdfCapturado = new File([pdfNew], "captura-de-pantalla.pdf", { type: 'application/pdf' });
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'PDF generado Exitosamente !!',
+          showConfirmButton: false,
+          timer: 1000
+        });
       });
     }
   }
 
-  onFileSelected(event: any, field: string) {
+  onFileSelected2(event: any, field: string) {
     const file = event.target.files[0];
-    if (field === 'file1') {
-      this.file1 = file;
-    } else if (field === 'file2') {
+   if (field === 'file2') {
       this.file2 = file;
     }
   }
 
   async mergePDFs() {
     if (!this.pdfCapturado || !this.file2) {
-      alert("Selecciona Archivos");
-      console.log('Debe seleccionar ambos archivos');
+      Swal.fire(
+        'No hay archivos Seleccionados !!',
+        'Debes Generar PDF y seleccionar archivo.',
+        'warning'
+      );
       return;
     }
   
@@ -291,12 +295,19 @@ export class AuthenticationComponent {
       pdfUnion.addPage(page);
     });
   
-    const mergedPdfBytes = await pdfUnion.save();
+    const mergedPdf = await pdfUnion.save();
     // Descargar el archivo PDF resultante
     const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(new Blob([mergedPdfBytes], { type: 'application/pdf' }));
+    downloadLink.href = URL.createObjectURL(new Blob([mergedPdf], { type: 'application/pdf' }));
     downloadLink.download = 'combinado.pdf';
     downloadLink.click();
+    Swal.fire({
+      position: 'center',
+      icon: 'success',
+      title: 'Union PDF Exitoso !!',
+      showConfirmButton: false,
+      timer: 1000
+    });
   }
 
   async readFile(file: File): Promise<Uint8Array> {
