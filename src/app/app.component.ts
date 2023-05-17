@@ -234,7 +234,7 @@ export class AuthenticationComponent {
         const pdf = new jsPDF("p", "mm", "a4");
         const imgData = canvas.toDataURL("image/png");
         const imgWidth = 210; 
-        const pageHeight = 295; 
+        const pageHeight = 297; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
         let position = 0;

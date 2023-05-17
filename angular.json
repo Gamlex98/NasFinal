@@ -30,7 +30,14 @@
             ],
             "scripts": [ "node_modules/bootstrap/dist/js/bootstrap.min.js"],
 
-            "allowedCommonJsDependencies": ["sweetalert2"]
+            "allowedCommonJsDependencies": ["sweetalert2",
+            "jspdf",
+            "canvg",
+            "raf",
+            "core-js",
+            "rgbcolor",
+            "pako",
+            "html2canvas"]
           },
           "configurations": {
             "production": {
