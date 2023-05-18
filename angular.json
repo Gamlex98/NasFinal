@@ -36,7 +36,6 @@
             "raf",
             "core-js",
             "rgbcolor",
-            "pako",
             "html2canvas"]
           },
           "configurations": {
