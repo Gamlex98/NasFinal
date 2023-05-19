@@ -28,12 +28,16 @@ export class AuthenticationComponent {
   carpetaAno =this.dirSubcarpetas[2];
   dirTotal=`${this.carpetaAno}/${this.carpetaMes}`;
 
+  carpetaCuadres2 =`2023/Mayo/03`;
+
   formdate = new  FormData();
   header=new HttpHeaders;
   upload = "";
 
   pdfCapturado !: File ;
   file2 !: File ;
+  archivoDescargado !: File;
+  archivoCombinado !: File;
 
   constructor(private authService: AuthenticationService,private http: HttpClient) {}
 
@@ -53,8 +57,24 @@ export class AuthenticationComponent {
     });
   }
 
-  FileSelected(event: any) {
-    this.fileToUpload = event.target.files[0];
+  FileSelected(event:any) {
+    const file = event.target.files[0];
+    const allowedExtensions = /(\.pdf)$/i;
+  
+    if (!allowedExtensions.exec(file.name)) {
+      Swal.fire({
+        position: 'center',
+        icon: 'warning',
+        title: 'Solo se PERMITE archivos PDF !!',
+        showConfirmButton: false,
+        timer: 1000
+      })
+      // Aquí puedes realizar cualquier acción adicional, como limpiar el campo de archivo o mostrar un mensaje de error.
+      return;
+    }
+  
+    // El archivo seleccionado es un PDF y puedes continuar con el procesamiento.
+    this.fileToUpload = file;
   }
 
   onUpload() {
@@ -259,25 +279,41 @@ export class AuthenticationComponent {
     }
   }
 
-  onFileSelected2(event: any, field: string) {
+  /* onFileSelected2(event: any, field: string) {
     const file = event.target.files[0];
    if (field === 'file2') {
       this.file2 = file;
     }
-  }
-
-  async mergePDFs() {
-    if (!this.pdfCapturado || !this.file2) {
-      Swal.fire(
-        'No hay archivos Seleccionados !!',
-        'Debes Generar PDF y seleccionar archivo.',
-        'warning'
-      );
-      return;
-    }
+  } */
   
+  async mergePDFs() {
+    // Obtenemos el archivo a unir de la Nas
+    this.authService.getList(this.sid, this.carpetaCuadres2).subscribe({
+      next: (data) => {
+        this.file2 = data[0].filename;
+        console.log('Nombre archivo 2: ',this.file2);
+        // Descargar y asignar el archivo
+        this.authService.download(this.sid, this.carpetaCuadres2, this.file2).subscribe((archivo: Blob) => {
+          archivo.arrayBuffer().then((arrayBuffer) => {
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const file = new File([uint8Array], this.file2.name, { type: archivo.type });
+            // Asignar el archivo a una variable
+            this.archivoDescargado = file;
+            // Continuar con el proceso de unión de PDFs aquí
+            this.processPDFs();
+          });
+        });
+      },
+      error: (error) => {
+        console.log('Error al obtener la lista de archivos:', error);
+      }
+    });
+  }
+  
+  async processPDFs() {
+    const uploadNas = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=upload&type=standard&sid=${this.sid}&dest_path=/OneDrive/CUADRES/S50/&overwrite=1&progress=-OneDrive`;
     const pdfBytes1 = await this.readFile(this.pdfCapturado);
-    const pdfBytes2 = await this.readFile(this.file2);
+    const pdfBytes2 = await this.readFile(this.archivoDescargado);
   
     const pdfUnion = await PDFDocument.create();
   
@@ -295,19 +331,27 @@ export class AuthenticationComponent {
       pdfUnion.addPage(page);
     });
   
+    // Se construye el nuevo archivo y se asigna a la variable archivoCombinado
     const mergedPdf = await pdfUnion.save();
-    // Descargar el archivo PDF resultante
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(new Blob([mergedPdf], { type: 'application/pdf' }));
-    downloadLink.download = 'combinado.pdf';
-    downloadLink.click();
-    Swal.fire({
-      position: 'center',
-      icon: 'success',
-      title: 'Union PDF Exitoso !!',
-      showConfirmButton: false,
-      timer: 1000
-    });
+    const archivoCombinadoBlob = new Blob([mergedPdf], { type: 'application/pdf' });
+    const archivoCombinadoFile = new File([archivoCombinadoBlob], 'archivoCombinado.pdf');
+    this.archivoCombinado = archivoCombinadoFile;
+  
+    // Enviamos el nuevo archivo combinado a la Nas
+    const formData = new FormData();
+    formData.append('file', this.archivoCombinado, this.archivoCombinado.name);
+    console.log("Nombre archivo a Enviar :", this.archivoCombinado.name);
+  
+    const headers = new HttpHeaders();
+    headers.append('Content-Type', 'multipart/form-data');
+    headers.append('Accept', 'application/json');
+  
+    this.doUpload(uploadNas, formData, headers);
+    Swal.fire(
+      'Archivo Combinado Enviado a la NAS',
+      '',
+      'success'
+    );
   }
 
   async readFile(file: File): Promise<Uint8Array> {
