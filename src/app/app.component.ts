@@ -11,8 +11,7 @@ import { PDFDocument } from 'pdf-lib';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AuthenticationComponent {
-
+export class AuthenticationComponent{
   fileToUpload !: File ;
   authenticated = false;
   sid = '';
@@ -20,27 +19,30 @@ export class AuthenticationComponent {
   enviando: boolean = false;
   overwrite= false;
   botonEnviar= false;
-
   rutaBase = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=createdir&type=standard`;
   rutaRelativa = '/OneDrive';
   dirSubcarpetas = ['CUADRES2','S50', '2025','Diciembre'];
   carpetaMes = this.dirSubcarpetas[3];
   carpetaAno =this.dirSubcarpetas[2];
   dirTotal=`${this.carpetaAno}/${this.carpetaMes}`;
-
   carpetaCuadres2 =`2023/Mayo/03`;
-
   formdate = new  FormData();
   header=new HttpHeaders;
   upload = "";
-
   pdfCapturado !: File ;
   file2 !: File ;
   archivoDescargado !: File;
   archivoCombinado !: File;
 
-  constructor(private authService: AuthenticationService,private http: HttpClient) {}
+  texto: string = "I:\\documentos\\importaciones";
+  textoCopiado: boolean = false;
+  mostrarAviso: boolean = false;
+  copiarBtnTexto: string = "Copiar Ruta";
 
+  infoTomada !: string;
+
+  constructor(private authService: AuthenticationService,private http: HttpClient) {}
+  
   authenticate() {
     const usuario = 'Intranet';
     const pass = 'MW50cjQxMjMrLSo=';
@@ -57,6 +59,50 @@ export class AuthenticationComponent {
     });
   }
 
+  copiarTexto() {
+    const textarea = document.createElement('textarea');
+    textarea.value = this.texto;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    this.textoCopiado = true;
+    this.mostrarAviso = true;
+    this.copiarBtnTexto = "Ruta Copiada";
+
+    setTimeout(() => {
+      this.resetearTextoCopiado();
+    }, 1000);
+  }
+
+  resetearTextoCopiado() {
+    this.textoCopiado = false;
+    this.mostrarAviso = false;
+    this.copiarBtnTexto = "Copiar Ruta";
+  }
+  
+  capturarInformacion(): void {
+    Swal.fire({
+      title: 'Ingrese la información',
+      input: 'textarea',
+      inputAttributes: {
+        autocapitalize: 'off',
+        oninput: 'this.style.height = ""; this.style.height = (this.scrollHeight + 2) + "px"',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Aceptar',
+      cancelButtonText: 'Cancelar',
+      showLoaderOnConfirm: true,
+      preConfirm: (informacion) => {
+
+        this.infoTomada=informacion;
+        // Hacer algo con la información capturada
+        console.log(informacion);
+      },
+    });
+  }
+  
   FileSelected(event:any) {
     const file = event.target.files[0];
     const allowedExtensions = /(\.pdf)$/i;
@@ -69,11 +115,9 @@ export class AuthenticationComponent {
         showConfirmButton: false,
         timer: 1000
       })
-      // Aquí puedes realizar cualquier acción adicional, como limpiar el campo de archivo o mostrar un mensaje de error.
       return;
     }
   
-    // El archivo seleccionado es un PDF y puedes continuar con el procesamiento.
     this.fileToUpload = file;
   }
 
@@ -185,7 +229,7 @@ export class AuthenticationComponent {
     })
   }
      
-    deleteFile():void {
+  deleteFile():void {
       this.authService.getList(this.sid , this.dirTotal).subscribe({
         next: (data) => {
         console.log("Lista archivos :", data);
@@ -221,7 +265,7 @@ export class AuthenticationComponent {
           console.log("Error en la busqueda Archivos", error)
         }
       })
-    }
+  }
   
   doUpload(uploadUrl: string, formData: FormData, headers: HttpHeaders) {
     this.http.post(uploadUrl, formData, { headers }).subscribe({
@@ -285,6 +329,11 @@ export class AuthenticationComponent {
       this.file2 = file;
     }
   } */
+
+  capturar_Enviar (){
+    this.capturarPantalla();
+    this.mergePDFs();
+  }
   
   async mergePDFs() {
     // Obtenemos el archivo a unir de la Nas

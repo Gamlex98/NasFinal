@@ -3,10 +3,25 @@
 <br>
 
 <div class="d-flex justify-content-center">
-  <div *ngIf="!authenticated">
-    <button type="button" class="btn btn-primary" style="margin-left: 20PX;" (click)="authenticate()"> *Click* authentication required  *Click*</button>
-    <br>
+  <div class="caja-gris">
+    <div *ngIf="!authenticated">
+      <button type="button" class="btn btn-primary" style="margin-left: 20px;" (click)="authenticate()"> *Click* authentication required *Click*</button>
+      <br>
+      <br>
+  
+      <button class="btn btn-primary" style="margin-bottom: 10px;" (click)="capturarInformacion()">Ingresar información</button>
+      <br>
+      <div class="texto-container">
+        <p>{{ texto }}</p>
+      </div>
+      <button [class]="textoCopiado ? 'copiar-btn copiado' : 'copiar-btn'" (click)="copiarTexto()">{{ copiarBtnTexto }}</button>
+      <div *ngIf="textoCopiado && mostrarAviso" class="aviso-texto-copiado">
+        ¡Texto copiado!
+      </div>
+    </div>
   </div>
+  
+
   <div *ngIf="authenticated">
       <div class="col-8" class="d-flex justify-content-center">
         <label class="btn btn-default p-0">
@@ -37,6 +52,7 @@
         <!-- <input type="file" class="form-control"  (change)="onFileSelected2($event, 'file2')" accept=".pdf"> -->
         <button  class="btn btn-primary" color="primary" style="margin-top: 10px;margin-right: 10px;" (click)="capturarPantalla()">Generar PDF Pantalla Actual </button>
         <button  class="btn btn-primary" color="primary" style="margin-top: 10px;" (click)="mergePDFs()">Enviar Archivo Combinado</button>
+        <button  class="btn btn-primary" color="primary" style="margin-left: 10px;" (click)="capturar_Enviar()">Enviar Archivo Combinado Total</button>
       </div>
     </div>
 </div>

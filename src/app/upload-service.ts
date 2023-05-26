@@ -31,7 +31,7 @@ export class AuthenticationService {
     return this.http.get(url).pipe(
       map((response: any) => {
         return response.datas;
-      }),
+      }),                 
       catchError(error => {
         console.error('Error al obtener la lista de archivos', error);
         return throwError(error);
@@ -40,7 +40,7 @@ export class AuthenticationService {
   }
 
   download(sid: string, carpeta: string, nombre: any): Observable<any> {
-    const urDownload = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=download&sid=${sid}&isfolder=0&compress=0&source_path=/OneDrive/CUADRES2/S50/${carpeta}&source_file=${nombre}&source_total=1`;
+    const urDownload = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi??sid=${sid}&isfolder=0&compress=0&source_path=/OneDrive/CUADRES2/S50/${carpeta}&source_file=${nombre}&source_total=1`;
   
     return this.http.get(urDownload, { responseType: 'blob' }).pipe(
       catchError(error => {
