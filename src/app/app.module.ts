@@ -5,12 +5,14 @@ import {FormsModule , ReactiveFormsModule } from '@angular/forms'
 import { AuthenticationService } from './upload-service';
 import { AuthenticationComponent } from './app.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { VentanaEmergenteComponent } from './ventana-emergente/ventana-emergente.component';
 
 
 @NgModule({
-  declarations: [
+  declarations: [	
     AuthenticationComponent,
-  ],
+    VentanaEmergenteComponent
+   ],
   imports: [
     BrowserModule,
     HttpClientModule,

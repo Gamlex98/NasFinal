@@ -1,3 +1,13 @@
+/* Estilos para la ventana modal */
+.modal {
+  display: none;
+  /* Agrega otros estilos de la ventana modal aquí */
+}
+
+.modal.show {
+  display: block;
+  /* Agrega otros estilos para mostrar la ventana modal aquí */
+}
 
 .title {
     text-align: center;

@@ -1,17 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, ViewContainerRef, AfterViewInit } from '@angular/core';
 import { AuthenticationService } from './upload-service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
+import { VentanaEmergenteComponent } from './ventana-emergente/ventana-emergente.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AuthenticationComponent{
+export class AuthenticationComponent implements AfterViewInit{
+
   fileToUpload !: File ;
   authenticated = false;
   sid = '';
@@ -25,7 +27,7 @@ export class AuthenticationComponent{
   carpetaMes = this.dirSubcarpetas[3];
   carpetaAno =this.dirSubcarpetas[2];
   dirTotal=`${this.carpetaAno}/${this.carpetaMes}`;
-  carpetaCuadres2 =`2023/Mayo/03`;
+  carpetaCuadres2 =`2023/MAYO/03/`;
   formdate = new  FormData();
   header=new HttpHeaders;
   upload = "";
@@ -40,9 +42,26 @@ export class AuthenticationComponent{
   copiarBtnTexto: string = "Copiar Ruta";
 
   infoTomada !: string;
+  showModal = false;
 
-  constructor(private authService: AuthenticationService,private http: HttpClient) {}
-  
+  constructor(private authService: AuthenticationService,private http: HttpClient , private viewContainerRef: ViewContainerRef) {}
+
+  ngAfterViewInit() {
+    const componentRef = this.viewContainerRef.createComponent(VentanaEmergenteComponent);
+    componentRef.changeDetectorRef.detectChanges();
+    const html = componentRef.location.nativeElement.innerHTML;
+    this.abrirVentanaEmergente(html);
+    componentRef.destroy();
+  }
+
+  abrirVentanaEmergente(html: string) {
+    Swal.fire({
+      title: 'Revisar No Conformidades !!',
+      html: html,
+      showCloseButton: true,
+      showConfirmButton: false,
+    });
+  }
   authenticate() {
     const usuario = 'Intranet';
     const pass = 'MW50cjQxMjMrLSo=';
@@ -95,7 +114,6 @@ export class AuthenticationComponent{
       cancelButtonText: 'Cancelar',
       showLoaderOnConfirm: true,
       preConfirm: (informacion) => {
-
         this.infoTomada=informacion;
         // Hacer algo con la información capturada
         console.log(informacion);
@@ -291,6 +309,18 @@ export class AuthenticationComponent{
     }, 100);
   }
 
+  /* onFileSelected2(event: any, field: string) {
+    const file = event.target.files[0];
+   if (field === 'file2') {
+      this.file2 = file;
+    }
+  } */
+
+  capturar_Enviar (){
+    this.capturarPantalla();
+    this.mergePDFs();
+  }
+
   capturarPantalla() {
     const elemento = document.body;
     if (elemento) {
@@ -319,35 +349,29 @@ export class AuthenticationComponent{
           showConfirmButton: false,
           timer: 1000
         });
+        console.log("Nombre captura:",this.pdfCapturado.name);
       });
     }
   }
-
-  /* onFileSelected2(event: any, field: string) {
-    const file = event.target.files[0];
-   if (field === 'file2') {
-      this.file2 = file;
-    }
-  } */
-
-  capturar_Enviar (){
-    this.capturarPantalla();
-    this.mergePDFs();
-  }
   
   async mergePDFs() {
-    // Obtenemos el archivo a unir de la Nas
+    // Obtener el nombre del archivo a unir de la Nas
+    let fileName: string;
     this.authService.getList(this.sid, this.carpetaCuadres2).subscribe({
       next: (data) => {
-        this.file2 = data[0].filename;
-        console.log('Nombre archivo 2: ',this.file2);
+        fileName = data[0].filename;
+        console.log('Nombre archivo 2:', fileName);
+  
         // Descargar y asignar el archivo
-        this.authService.download(this.sid, this.carpetaCuadres2, this.file2).subscribe((archivo: Blob) => {
+        this.authService.download(this.sid, this.carpetaCuadres2, fileName).subscribe((archivo: Blob) => {
           archivo.arrayBuffer().then((arrayBuffer) => {
             const uint8Array = new Uint8Array(arrayBuffer);
-            const file = new File([uint8Array], this.file2.name, { type: archivo.type });
+            const file = new File([uint8Array], fileName, { type: archivo.type });
+  
             // Asignar el archivo a una variable
             this.archivoDescargado = file;
+            console.log("Archivo descargado:", this.archivoDescargado.name);
+  
             // Continuar con el proceso de unión de PDFs aquí
             this.processPDFs();
           });
@@ -358,11 +382,12 @@ export class AuthenticationComponent{
       }
     });
   }
-  
+
   async processPDFs() {
     const uploadNas = `http://172.16.1.24:8095/cgi-bin/filemanager/utilRequest.cgi?func=upload&type=standard&sid=${this.sid}&dest_path=/OneDrive/CUADRES/S50/&overwrite=1&progress=-OneDrive`;
     const pdfBytes1 = await this.readFile(this.pdfCapturado);
     const pdfBytes2 = await this.readFile(this.archivoDescargado);
+    console.log("Archivo leido !!");
   
     const pdfUnion = await PDFDocument.create();
   
